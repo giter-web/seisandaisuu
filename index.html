@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2倍計算アプリ</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#88c9bf">
+  <link rel="icon" href="icon.png">
+
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f8f5; }
+    .line { margin-bottom: 15px; }
+    input { width: 100px; padding: 5px; }
+    span { margin-left: 10px; font-weight: bold; }
+    button { padding: 10px 20px; background: #88c9bf; color: white; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h2>🌱 2倍計算アプリ</h2>
+
+  <div class="line">Aライン: <input type="number" id="A"> → <span id="A_result"></span></div>
+  <div class="line">Bライン: <input type="number" id="B"> → <span id="B_result"></span></div>
+  <div class="line">Cライン: <input type="number" id="C"> → <span id="C_result"></span></div>
+  <div class="line">Dライン: <input type="number" id="D"> → <span id="D_result"></span></div>
+  <div class="line">Eライン: <input type="number" id="E"> → <span id="E_result"></span></div>
+  <div class="line">Fライン: <input type="number" id="F"> → <span id="F_result"></span></div>
+
+  <button onclick="calculate()">計算する</button>
+
+  <script>
+    // PWA Service Worker 登録
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+
+    function calculate() {
+      ['A','B','C','D','E','F'].forEach(id => {
+        const val = document.getElementById(id).value;
+        document.getElementById(id + '_result').textContent = val ? val * 2 : '';
+      });
+    }
+  </script>
+</body>
+</html>
