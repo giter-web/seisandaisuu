@@ -1,24 +1,30 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>脚数計算</title>
+  <title>脚数計算 - リアルタイム共有</title>
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#88c9bf">
   <link rel="icon" href="icon.png">
 
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f0f8f5; }
-    .line { margin-bottom: 15px; }
-    input { width: 100px; padding: 5px; }
-    span { margin-left: 10px; font-weight: bold; }
-    button { padding: 10px 20px; background: #88c9bf; color: white; border: none; border-radius: 5px; }
+    body { font-family: sans-serif; padding: 20px; background: #f0f8f5; color: #333; }
+    h2 { color: #555; }
+    .status-bar { font-size: 12px; color: #88c9bf; margin-bottom: 15px; font-weight: bold; }
+    .line { margin-bottom: 15px; display: flex; align-items: center; }
+    input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+    span { margin-left: 15px; font-weight: bold; color: #444; }
+    .result-box { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; border: 2px solid #88c9bf; }
+    .result-line { margin-bottom: 10px; font-size: 1.1em; }
   </style>
 </head>
 <body>
-  <h2>🌱 脚数計算</h2>
+
+  <h2>🌱 脚数計算 (共有中)</h2>
+  <div id="status" class="status-bar">クラウド同期：待機中...</div>
 
   <div class="line">A1ライン: <input type="number" id="A1"> → <span id="A1_result"></span></div>
   <div class="line">A2ライン: <input type="number" id="A2"> → <span id="A2_result"></span></div>
@@ -28,42 +34,94 @@
   <div class="line">Eライン: <input type="number" id="E"> → <span id="E_result"></span></div>
   <div class="line">Fライン: <input type="number" id="F"> → <span id="F_result"></span></div>
 
-  <!-- ★ 追加：B + D を足して2倍した結果 --> 
-  <div class="line">B + D 合計脚数: <span id="BD_double"></span></div>
-  <div class="line">A1 + A2 + E 合計脚数: <span id="A12E_result"></span></div>
+  <div class="result-box">
+    <div class="result-line">B + D 合計脚数: <span id="BD_double">0</span></div>
+    <div class="result-line">A1 + A2 + E 合計脚数: <span id="A12E_result">0</span></div>
+  </div>
 
-  <button onclick="calculate()">計算する</button>
+  <script type="module">
+    // CDN経由でFirebase SDKを読み込み
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, set, onValue } from "https://gstatic.com";
 
-  <script>
+    // あなたのFirebase設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
+      authDomain: "kyakusuu-app.firebaseapp.com",
+      projectId: "kyakusuu-app",
+      storageBucket: "kyakusuu-app.firebasestorage.app",
+      messagingSenderId: "266817532836",
+      appId: "1:266817532836:web:3864087131a7675dbf8731",
+      measurementId: "G-391KFG9YFR",
+      databaseURL: "https://firebaseio.com" // Realtime DatabaseのURLを追加
+    };
+
+    // 初期化
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dataRef = ref(db, 'shared_counts');
+    const inputIds = ['A1','A2','B','C','D','E','F'];
+
+    // --- 1. Firebaseからのリアルタイム受信 ---
+    onValue(dataRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      inputIds.forEach(id => {
+        // 今自分が入力している最中のボックスは上書きしない（カーソル飛び防止）
+        if (document.activeElement.id !== id) {
+          document.getElementById(id).value = data[id] || "";
+        }
+      });
+      calculate(); // 受信したら計算を更新
+      document.getElementById('status').textContent = "クラウド同期：最新の状態です ✅";
+    });
+
+    // --- 2. 入力時の自動保存処理 ---
+    inputIds.forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        const vals = {};
+        inputIds.forEach(key => {
+          vals[key] = document.getElementById(key).value;
+        });
+
+        // データをFirebaseへ送信
+        set(dataRef, vals);
+        document.getElementById('status').textContent = "クラウド同期：更新中...";
+      });
+    });
+
+    // --- 3. 計算ロジック ---
+    function calculate() {
+      const getVal = (id) => Number(document.getElementById(id).value) || 0;
+
+      // 各ラインの2倍計算（E以外）
+      ['A1','A2','B','C','D','F'].forEach(id => {
+        const val = getVal(id);
+        document.getElementById(id + '_result').textContent = val ? val * 2 : '';
+      });
+
+      // Eラインの表示
+      const eVal = document.getElementById('E').value;
+      document.getElementById('E_result').textContent = eVal ? eVal : '';
+
+      // 特殊合計計算
+      const b = getVal('B'), d = getVal('D'), a1 = getVal('A1'), a2 = getVal('A2'), e = getVal('E');
+      
+      document.getElementById('BD_double').textContent = (b + d) * 2;
+      document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
+    }
+
     // PWA Service Worker 登録
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js');
     }
+  </script>
+</body>
+</html>
 
-function calculate() {
-  ['A1','A2','B','C','D','E','F'].forEach(id => {
-    const val = document.getElementById(id).value;
-    document.getElementById(id + '_result').textContent = val ? val * 2 : '';
-  });
-
-  // E はそのまま表示
-  const eVal = document.getElementById('E').value;
-  document.getElementById('E_result').textContent = eVal ? eVal : '';
-
-  // ★ B + D を足して2倍
-  const b = Number(document.getElementById('B').value) || 0;
-  const d = Number(document.getElementById('D').value) || 0;
-  document.getElementById('BD_double').textContent = (b + d) * 2;
-
-  // ★ A1×2 + A2×2 + E を計算
-  const a1 = Number(document.getElementById('A1').value) || 0;
-  const a2 = Number(document.getElementById('A2').value) || 0;
-  const e  = Number(document.getElementById('E').value) || 0;
-
-  const a12e = (a1 * 2) + (a2 * 2) + e;
-  document.getElementById('A12E_result').textContent = a12e;
-}
 
   </script>
 </body>
 </html>
+
