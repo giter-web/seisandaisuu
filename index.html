@@ -4,21 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>脚数計算 - リアルタイム共有</title>
-
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#88c9bf">
-  <link rel="icon" href="icon.png">
-
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f0f8f5; color: #333; }
-    h2 { color: #555; }
     .status-bar { font-size: 12px; color: #88c9bf; margin-bottom: 15px; font-weight: bold; }
     .line { margin-bottom: 15px; }
     input { width: 100px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
     span { margin-left: 10px; font-weight: bold; color: #444; }
     .result-box { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #88c9bf; }
     button { padding: 12px 24px; background: #88c9bf; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    button:active { background: #6da39a; }
   </style>
 </head>
 <body>
@@ -39,7 +32,6 @@
     <div class="line">A1 + A2 + E 合計脚数: <span id="A12E_result"></span></div>
   </div>
 
-  <!-- ★ 計算ボタンを復活 -->
   <button id="calcBtn">計算して共有</button>
 
   <script type="module">
@@ -62,34 +54,41 @@
     const dataRef = ref(db, 'shared_counts');
     const inputIds = ['A1','A2','B','C','D','E','F'];
 
-    // --- 保存関数 (Firebaseへ送信) ---
-    function saveData() {
-      const vals = {};
-      inputIds.forEach(id => {
-        vals[id] = document.getElementById(id).value;
-      });
-      set(dataRef, vals);
-      document.getElementById('status').textContent = "クラウドに同期しました ✅";
-    }
-
-    // --- 計算表示関数 ---
+    // ★ 計算ロジック本体 (ここをご提示の通りに修正しました)
     function calculate() {
-      const getVal = (id) => Number(document.getElementById(id).value) || 0;
-
+      // 1. 各ラインの2倍表示（A1, A2, B, C, D, F）
       ['A1','A2','B','C','D','F'].forEach(id => {
-        const val = getVal(id);
+        const val = document.getElementById(id).value;
         document.getElementById(id + '_result').textContent = val ? val * 2 : '';
       });
 
+      // 2. E はそのまま表示
       const eVal = document.getElementById('E').value;
-      document.getElementById('E_result').textContent = eVal || '';
+      document.getElementById('E_result').textContent = eVal ? eVal : '';
 
-      const b = getVal('B'), d = getVal('D'), a1 = getVal('A1'), a2 = getVal('A2'), e = getVal('E');
+      // 3. ★ B + D を足して2倍
+      const b = Number(document.getElementById('B').value) || 0;
+      const d = Number(document.getElementById('D').value) || 0;
       document.getElementById('BD_double').textContent = (b + d) * 2;
-      document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
+
+      // 4. ★ A1×2 + A2×2 + E を計算
+      const a1 = Number(document.getElementById('A1').value) || 0;
+      const a2 = Number(document.getElementById('A2').value) || 0;
+      const e  = Number(document.getElementById('E').value) || 0;
+
+      const a12e = (a1 * 2) + (a2 * 2) + e;
+      document.getElementById('A12E_result').textContent = a12e;
     }
 
-    // 1. Firebaseからデータを受信
+    // 保存用
+    function saveData() {
+      const vals = {};
+      inputIds.forEach(id => { vals[id] = document.getElementById(id).value; });
+      set(dataRef, vals);
+      document.getElementById('status').textContent = "クラウド同期済み ✅";
+    }
+
+    // Firebaseデータ受信
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
@@ -98,23 +97,24 @@
           document.getElementById(id).value = data[id] || "";
         }
       });
-      calculate();
+      calculate(); // 受信した数値で再計算
     });
 
-    // 2. ボタンクリックで保存＆計算
-    document.getElementById('calcBtn').addEventListener('click', () => {
+    // ボタンクリック
+    document.getElementById('calcBtn').onclick = () => {
+      calculate();
       saveData();
-      calculate();
-    });
+    };
 
-    // 3. 入力されるたびに自動保存 (お好みで残しています)
+    // 入力されるたびに自動で計算＆保存
     inputIds.forEach(id => {
-      document.getElementById(id).addEventListener('input', saveData);
+      document.getElementById(id).addEventListener('input', () => {
+        calculate();
+        saveData();
+      });
     });
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js');
-    }
   </script>
 </body>
 </html>
+
