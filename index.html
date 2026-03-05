@@ -6,12 +6,13 @@
   <title>脚数計算 - リアルタイム共有</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f0f8f5; color: #333; }
-    .status-bar { font-size: 12px; color: #88c9bf; margin-bottom: 15px; font-weight: bold; }
+    .status-bar { font-size: 12px; color: #44a696; margin-bottom: 15px; font-weight: bold; }
     .line { margin-bottom: 15px; }
     input { width: 100px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
     span { margin-left: 10px; font-weight: bold; color: #444; }
     .result-box { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #88c9bf; }
     button { padding: 12px 24px; background: #88c9bf; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    button:active { background: #6da39a; }
   </style>
 </head>
 <body>
@@ -35,27 +36,30 @@
   <button id="calcBtn">計算して共有</button>
 
   <script type="module">
-
+    // Firebase SDKを読み込み
     import { initializeApp } from "https://gstatic.com";
     import { getDatabase, ref, set, onValue } from "https://gstatic.com";
-    
+
+    // あなたのFirebase設定
     const firebaseConfig = {
       apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
-      authDomain: "kyakusuu-app.firebaseapp.com",
+      authDomain: "://firebaseapp.com",
       projectId: "kyakusuu-app",
       storageBucket: "kyakusuu-app.firebasestorage.app",
       messagingSenderId: "266817532836",
       appId: "1:266817532836:web:3864087131a7675dbf8731",
       measurementId: "G-391KFG9YFR",
-      databaseURL: "https://kyakusuu-app-default-rtdb.asia-southeast1.firebasedatabase.app/"
+      // ★ここにRealtime DatabaseのURLを入力してください
+      databaseURL: "https://kyakusuu-app-default-rtdb.asia-southeast1.firebasedatabase.app/" 
     };
 
+    // Firebaseの初期化
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dataRef = ref(db, 'shared_counts');
-    const inputIds = ['A1','A2','B','C','D','E','F'];
+    const inputIds = ['A1', 'A2', 'B', 'C', 'D', 'E', 'F'];
 
-    // ★ 計算ロジック本体 (ここをご提示の通りに修正しました)
+    // 計算ロジック本体
     function calculate() {
       // 1. 各ラインの2倍表示（A1, A2, B, C, D, F）
       ['A1','A2','B','C','D','F'].forEach(id => {
@@ -67,47 +71,50 @@
       const eVal = document.getElementById('E').value;
       document.getElementById('E_result').textContent = eVal ? eVal : '';
 
-      // 3. ★ B + D を足して2倍
+      // 3. B + D を足して2倍
       const b = Number(document.getElementById('B').value) || 0;
       const d = Number(document.getElementById('D').value) || 0;
       document.getElementById('BD_double').textContent = (b + d) * 2;
 
-      // 4. ★ A1×2 + A2×2 + E を計算
+      // 4. A1×2 + A2×2 + E を計算
       const a1 = Number(document.getElementById('A1').value) || 0;
       const a2 = Number(document.getElementById('A2').value) || 0;
       const e  = Number(document.getElementById('E').value) || 0;
-
-      const a12e = (a1 * 2) + (a2 * 2) + e;
-      document.getElementById('A12E_result').textContent = a12e;
+      document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
     }
 
-    // 保存用
+    // Firebaseへ保存
     function saveData() {
       const vals = {};
       inputIds.forEach(id => { vals[id] = document.getElementById(id).value; });
-      set(dataRef, vals);
-      document.getElementById('status').textContent = "クラウド同期済み ✅";
+      set(dataRef, vals).then(() => {
+        document.getElementById('status').textContent = "クラウド同期済み ✅";
+      }).catch((error) => {
+        document.getElementById('status').textContent = "エラー: " + error.message;
+      });
     }
 
-    // Firebaseデータ受信
+    // Firebaseからデータを受信して画面を更新
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
       inputIds.forEach(id => {
+        // 入力中の項目は上書きしない
         if (document.activeElement.id !== id) {
           document.getElementById(id).value = data[id] || "";
         }
       });
-      calculate(); // 受信した数値で再計算
+      calculate(); 
+      document.getElementById('status').textContent = "最新データを取得しました";
     });
 
-    // ボタンクリック
+    // ボタンクリック時の動作
     document.getElementById('calcBtn').onclick = () => {
       calculate();
       saveData();
     };
 
-    // 入力されるたびに自動で計算＆保存
+    // 数値を入力するたびに自動計算＆保存
     inputIds.forEach(id => {
       document.getElementById(id).addEventListener('input', () => {
         calculate();
@@ -119,6 +126,4 @@
 </body>
 </html>
 
-
-
-
+コードは注意してご使用
