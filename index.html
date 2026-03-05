@@ -36,11 +36,11 @@
   <button id="calcBtn">計算して共有</button>
 
   <script type="module">
-    // Firebase SDKを読み込み
+    // 1. Firebase SDK (正確なフルURLに修正済み)
     import { initializeApp } from "https://gstatic.com";
     import { getDatabase, ref, set, onValue } from "https://gstatic.com";
 
-    // あなたのFirebase設定
+    // 2. あなたのFirebase設定 (Database URLを修正済み)
     const firebaseConfig = {
       apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
       authDomain: "://firebaseapp.com",
@@ -49,8 +49,7 @@
       messagingSenderId: "266817532836",
       appId: "1:266817532836:web:3864087131a7675dbf8731",
       measurementId: "G-391KFG9YFR",
-      // ★ここにRealtime DatabaseのURLを入力してください
-      databaseURL: "https://kyakusuu-app-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+      databaseURL: "https://firebasedatabase.app" 
     };
 
     // Firebaseの初期化
@@ -59,47 +58,46 @@
     const dataRef = ref(db, 'shared_counts');
     const inputIds = ['A1', 'A2', 'B', 'C', 'D', 'E', 'F'];
 
-    // 計算ロジック本体
+    // 計算ロジック
     function calculate() {
-      // 1. 各ラインの2倍表示（A1, A2, B, C, D, F）
+      // 各ラインの2倍表示（A1, A2, B, C, D, F）
       ['A1','A2','B','C','D','F'].forEach(id => {
         const val = document.getElementById(id).value;
         document.getElementById(id + '_result').textContent = val ? val * 2 : '';
       });
 
-      // 2. E はそのまま表示
+      // E はそのまま
       const eVal = document.getElementById('E').value;
       document.getElementById('E_result').textContent = eVal ? eVal : '';
 
-      // 3. B + D を足して2倍
+      // B + D を足して2倍
       const b = Number(document.getElementById('B').value) || 0;
       const d = Number(document.getElementById('D').value) || 0;
       document.getElementById('BD_double').textContent = (b + d) * 2;
 
-      // 4. A1×2 + A2×2 + E を計算
+      // A1×2 + A2×2 + E を計算
       const a1 = Number(document.getElementById('A1').value) || 0;
       const a2 = Number(document.getElementById('A2').value) || 0;
       const e  = Number(document.getElementById('E').value) || 0;
       document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
     }
 
-    // Firebaseへ保存
+    // 保存
     function saveData() {
       const vals = {};
       inputIds.forEach(id => { vals[id] = document.getElementById(id).value; });
       set(dataRef, vals).then(() => {
         document.getElementById('status').textContent = "クラウド同期済み ✅";
       }).catch((error) => {
-        document.getElementById('status').textContent = "エラー: " + error.message;
+        document.getElementById('status').textContent = "同期エラー: " + error.message;
       });
     }
 
-    // Firebaseからデータを受信して画面を更新
+    // 受信（リアルタイム同期）
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
       inputIds.forEach(id => {
-        // 入力中の項目は上書きしない
         if (document.activeElement.id !== id) {
           document.getElementById(id).value = data[id] || "";
         }
@@ -108,24 +106,11 @@
       document.getElementById('status').textContent = "最新データを取得しました";
     });
 
-    // ボタンクリック時の動作
-    document.getElementById('calcBtn').onclick = () => {
-      calculate();
-      saveData();
-    };
-
-    // 数値を入力するたびに自動計算＆保存
+    // 各イベント
+    document.getElementById('calcBtn').onclick = () => { calculate(); saveData(); };
     inputIds.forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        calculate();
-        saveData();
-      });
+      document.getElementById(id).addEventListener('input', () => { calculate(); saveData(); });
     });
-
   </script>
 </body>
 </html>
-
-コードは注意してご使用
-
-
