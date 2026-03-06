@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>脚数計算 - リアルタイム共有</title>
+  <title>脚数計算</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f0f8f5; color: #333; }
     .status-bar { font-size: 12px; color: #44a696; margin-bottom: 15px; font-weight: bold; }
@@ -17,7 +17,7 @@
 </head>
 <body>
 
-  <h2>🌱 脚数計算 (共有中)</h2>
+  <h2>🌱 脚数計算 </h2>
   <div id="status" class="status-bar">クラウド同期：接続中...</div>
 
   <div class="line">A1ライン: <input type="number" id="A1"> → <span id="A1_result"></span></div>
@@ -33,7 +33,7 @@
     <div class="line">A1 + A2 + E 合計脚数: <span id="A12E_result"></span></div>
   </div>
 
-  <button id="calcBtn">計算して共有</button>
+  
 
   <script type="module">
     // 1. Firebase SDK (正確なフルURLに修正済み)
@@ -41,7 +41,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
-    // 2. あなたのFirebase設定 (Database URLを修正済み)
+    // 2. Firebase設定 (Database URLを修正済み)
     const firebaseConfig = {
       apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
       authDomain: "://firebaseapp.com",
@@ -115,6 +115,7 @@
   </script>
 </body>
 </html>
+
 
 
 
