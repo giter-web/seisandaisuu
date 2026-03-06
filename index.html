@@ -37,8 +37,9 @@
 
   <script type="module">
     // 1. Firebase SDK (正確なフルURLに修正済み)
-    import { initializeApp } from "https://gstatic.com";
-    import { getDatabase, ref, set, onValue } from "https://gstatic.com";
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
 
     // 2. あなたのFirebase設定 (Database URLを修正済み)
     const firebaseConfig = {
@@ -114,4 +115,5 @@
   </script>
 </body>
 </html>
+
 
