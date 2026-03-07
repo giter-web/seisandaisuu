@@ -142,7 +142,7 @@
            // チェックボックスの同期
       checkIds.forEach(id => {
         if (document.activeElement.id !== id) {
-          document.getElementById(id).checked = data[id] || false;
+          document.getElementById(id).checked = !!data[id];
         }
         
       });
@@ -163,6 +163,7 @@
   </script>
 </body>
 </html>
+
 
 
 
