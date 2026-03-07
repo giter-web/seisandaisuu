@@ -33,7 +33,7 @@
     <div class="line">A1 + A2 + E 合計脚数: <span id="A12E_result"></span></div>
   </div>
 
-  <button id="calcBtn">計算して共有</button>
+  //<button id="calcBtn">計算して共有</button>
 
   <script type="module">
     // 1. Firebase SDK (正確なフルURLに修正済み)
@@ -127,13 +127,14 @@
     });
 
     // 各イベント
-    document.getElementById('calcBtn').onclick = () => { calculate(); saveData(); };
+    //document.getElementById('calcBtn').onclick = () => { calculate(); saveData(); };
     inputIds.forEach(id => {
       document.getElementById(id).addEventListener('input', () => { calculate(); saveData(); });
     });
   </script>
 </body>
 </html>
+
 
 
 
