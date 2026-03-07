@@ -141,7 +141,10 @@
       });
            // チェックボックスの同期
       checkIds.forEach(id => {
-        document.getElementById(id).checked = data[id] || false;
+        if (document.activeElement.id !== id) {
+          document.getElementById(id).checked = data[id] || false;
+        }
+        
       });
 
       calculate(); 
@@ -151,7 +154,7 @@
     allIds.forEach(id => {
       const el = document.getElementById(id);
       // チェックボックスなら'change'、数値入力なら'input'イベントを使用する
-      const eventType = el.type === 'checkbox' ? 'change' : 'input';
+      const eventType = el.type === 'checkbox' ? 'click' : 'input';
       el.addEventListener(eventType, () => { 
         calculate(); 
         saveData(); 
@@ -160,6 +163,7 @@
   </script>
 </body>
 </html>
+
 
 
 
