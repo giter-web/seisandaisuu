@@ -13,6 +13,12 @@
     .result-box { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #88c9bf; }
     button { padding: 12px 24px; background: #88c9bf; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     button:active { background: #6da39a; }
+        
+    /* チェックボックスエリアのスタイル */
+    .check-section { margin-top: 20px; padding: 10px; background: #e8f4f1; border-radius: 8px; }
+    .check-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; cursor: pointer; }
+    .check-item input { width: 20px; height: 20px; margin-right: 10px; cursor: pointer; }
+
   </style>
 </head>
 <body>
@@ -34,6 +40,12 @@
   </div>
 
   <button id="calcBtn">計算して共有</button>
+   <!-- 追加したチェックボックスセクション -->
+  <div class="check-section">
+    <label class="check-item"><input type="checkbox" id="check_kyakusuu"> 脚数入力</label>
+    <label class="check-item"><input type="checkbox" id="check_hoist"> ホイストチェック</label>
+    <label class="check-item"><input type="checkbox" id="check_card"> 良品カードチェック</label>
+  </div>
 
   <script type="module">
     // 1. Firebase SDK (正確なフルURLに修正済み)
@@ -58,6 +70,8 @@
     const db = getDatabase(app);
     const dataRef = ref(db, 'shared_counts');
     const inputIds = ['A1', 'A2', 'B', 'C', 'D', 'E', 'F'];
+    const checkIds = ['check_kyakusuu', 'check_hoist', 'check_card'];
+    const allIds = [...inputIds, ...checkIds];
 
     // 計算ロジック
     function calculate() {
@@ -122,18 +136,28 @@
           document.getElementById(id).value = data[id] || "";
         }
       });
+           // チェックボックスの同期
+      checkIds.forEach(id => {
+        document.getElementById(id).checked = data[id] || false;
+      });
+
       calculate(); 
       document.getElementById('status').textContent = "最新データを取得しました";
     });
-
-    // 各イベント
     document.getElementById('calcBtn').onclick = () => { calculate(); saveData(); };
-    inputIds.forEach(id => {
-      document.getElementById(id).addEventListener('input', () => { calculate(); saveData(); });
+    allIds.forEach(id => {
+      const el = document.getElementById(id);
+      // チェックボックスなら'change'、数値入力なら'input'イベントを使用する
+      const eventType = el.type === 'checkbox' ? 'change' : 'input';
+      el.addEventListener(eventType, () => { 
+        calculate(); 
+        saveData(); 
+      });
     });
   </script>
 </body>
 </html>
+
 
 
 
