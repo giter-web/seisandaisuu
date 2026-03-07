@@ -132,20 +132,21 @@
        }
       // -----------------------
 
-
-      
+   // 数値入力の同期
       inputIds.forEach(id => {
         if (document.activeElement.id !== id) {
           document.getElementById(id).value = data[id] || "";
         }
       });
-           // チェックボックスの同期
+
+      // チェックボックスの同期（制限なしで常に最新にする）
       checkIds.forEach(id => {
-        if (document.activeElement.id !== id) {
-          document.getElementById(id).checked = !!data[id];
+        const el = document.getElementById(id);
+        if (el) {
+          el.checked = !!data[id];
         }
-        
       });
+      
 
       calculate(); 
       document.getElementById('status').textContent = "最新データを取得しました";
@@ -163,6 +164,7 @@
   </script>
 </body>
 </html>
+
 
 
 
