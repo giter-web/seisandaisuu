@@ -44,12 +44,9 @@
   </div>
 
   <script type="module">
-    // 1. Firebase SDK (正確なフルURLに修正済み)
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, set, onValue } from "https://gstatic.com";
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
-
-    // 2. Firebase設定 (Database URLを修正済み)
     const firebaseConfig = {
       apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
       authDomain: "://firebaseapp.com",
@@ -58,8 +55,9 @@
       messagingSenderId: "266817532836",
       appId: "1:266817532836:web:3864087131a7675dbf8731",
       measurementId: "G-391KFG9YFR",
-      databaseURL: "https://kyakusuu-app-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+      databaseURL: "https://firebasedatabase.app" 
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dataRef = ref(db, 'shared_counts');
@@ -134,5 +132,3 @@
   </script>
 </body>
 </html>
-
-
