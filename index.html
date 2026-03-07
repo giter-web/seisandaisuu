@@ -154,7 +154,7 @@
     allIds.forEach(id => {
       const el = document.getElementById(id);
       // チェックボックスなら'change'、数値入力なら'input'イベントを使用する
-      const eventType = el.type === 'checkbox' ? 'click' : 'input';
+      const eventType = el.type === 'checkbox' ? 'change' : 'input';
       el.addEventListener(eventType, () => { 
         calculate(); 
         saveData(); 
@@ -163,6 +163,7 @@
   </script>
 </body>
 </html>
+
 
 
 
