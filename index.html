@@ -87,6 +87,10 @@
     function saveData() {
       const vals = {};
       inputIds.forEach(id => { vals[id] = document.getElementById(id).value; });
+
+        // 現在の時刻を追加
+      vals.updatedAt = Date.now(); 
+
       set(dataRef, vals).then(() => {
         document.getElementById('status').textContent = "クラウド同期済み ✅";
       }).catch((error) => {
@@ -98,6 +102,21 @@
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
+       // --- 4時間経過チェック ---
+      const fourHours = 10 * 1000; // 4時間をミリ秒に変換
+      const now = Date.now();
+  
+      if (data.updatedAt && (now - data.updatedAt > fourHours)) {
+        // 4時間以上経過していたら入力を空にする
+        inputIds.forEach(id => { document.getElementById(id).value = ""; });
+        calculate();
+        document.getElementById('status').textContent = "古いデータは破棄されました";
+        return;
+       }
+      // -----------------------
+
+
+      
       inputIds.forEach(id => {
         if (document.activeElement.id !== id) {
           document.getElementById(id).value = data[id] || "";
@@ -115,6 +134,7 @@
   </script>
 </body>
 </html>
+
 
 
 
