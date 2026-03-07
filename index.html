@@ -103,7 +103,7 @@
       const data = snapshot.val();
       if (!data) return;
        // --- 4時間経過チェック ---
-      const fourHours = 10 * 1000; // 4時間をミリ秒に変換
+      const fourHours = 4 * 60 * 60 * 1000; // 4時間をミリ秒に変換
       const now = Date.now();
   
       if (data.updatedAt && (now - data.updatedAt > fourHours)) {
@@ -134,6 +134,7 @@
   </script>
 </body>
 </html>
+
 
 
 
