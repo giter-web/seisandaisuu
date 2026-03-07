@@ -7,12 +7,15 @@
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f0f8f5; color: #333; }
     .status-bar { font-size: 12px; color: #44a696; margin-bottom: 15px; font-weight: bold; }
-    .line { margin-bottom: 15px; }
-    input { width: 100px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+    .line { margin-bottom: 15px; display: flex; align-items: center; }
+    input[type="number"] { width: 100px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
     span { margin-left: 10px; font-weight: bold; color: #444; }
     .result-box { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #88c9bf; }
-    button { padding: 12px 24px; background: #88c9bf; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    button:active { background: #6da39a; }
+    
+    /* チェックボックスのスタイル */
+    .check-section { margin-top: 25px; padding-top: 15px; border-top: 2px dashed #88c9bf; }
+    .check-line { margin-bottom: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; }
+    input[type="checkbox"] { width: 20px; height: 20px; margin-right: 10px; cursor: pointer; accent-color: #44a696; }
   </style>
 </head>
 <body>
@@ -33,15 +36,17 @@
     <div class="line">A1 + A2 + E 合計脚数: <span id="A12E_result"></span></div>
   </div>
 
-
+  <!-- 追加したチェックボックス -->
+  <div class="check-section">
+    <label class="check-line"><input type="checkbox" id="check_kyakusuu"> 客数入力済み</label>
+    <label class="check-line"><input type="checkbox" id="check_hoist"> ホイストチェック</label>
+    <label class="check-line"><input type="checkbox" id="check_card"> 良品カードチェック</label>
+  </div>
 
   <script type="module">
-    // 1. Firebase SDK (正確なフルURLに修正済み)
+    import { initializeApp } from "https://gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
-
-    // 2. Firebase設定 (Database URLを修正済み)
     const firebaseConfig = {
       apiKey: "AIzaSyBdyEwQBM_fNIeJ2plVFBFPkzxFCjfSiYE",
       authDomain: "://firebaseapp.com",
@@ -50,46 +55,38 @@
       messagingSenderId: "266817532836",
       appId: "1:266817532836:web:3864087131a7675dbf8731",
       measurementId: "G-391KFG9YFR",
-      databaseURL: "https://kyakusuu-app-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+      databaseURL: "https://firebasedatabase.app" 
     };
 
-    // Firebaseの初期化
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dataRef = ref(db, 'shared_counts');
+    
     const inputIds = ['A1', 'A2', 'B', 'C', 'D', 'E', 'F'];
+    const checkIds = ['check_kyakusuu', 'check_hoist', 'check_card'];
 
-    // 計算ロジック
     function calculate() {
-      // 各ラインの2倍表示（A1, A2, B, C, D, F）
       ['A1','A2','B','C','D','F'].forEach(id => {
         const val = document.getElementById(id).value;
         document.getElementById(id + '_result').textContent = val ? val * 2 : '';
       });
-
-      // E はそのまま
       const eVal = document.getElementById('E').value;
       document.getElementById('E_result').textContent = eVal ? eVal : '';
 
-      // B + D を足して2倍
       const b = Number(document.getElementById('B').value) || 0;
       const d = Number(document.getElementById('D').value) || 0;
       document.getElementById('BD_double').textContent = (b + d) * 2;
 
-      // A1×2 + A2×2 + E を計算
       const a1 = Number(document.getElementById('A1').value) || 0;
       const a2 = Number(document.getElementById('A2').value) || 0;
       const e  = Number(document.getElementById('E').value) || 0;
       document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
     }
 
-    // 保存
     function saveData() {
-      const vals = {};
+      const vals = { updatedAt: Date.now() };
       inputIds.forEach(id => { vals[id] = document.getElementById(id).value; });
-
-        // 現在の時刻を追加
-      vals.updatedAt = Date.now(); 
+      checkIds.forEach(id => { vals[id] = document.getElementById(id).checked; }); // チェック状態保存
 
       set(dataRef, vals).then(() => {
         document.getElementById('status').textContent = "クラウド同期済み ✅";
@@ -98,49 +95,40 @@
       });
     }
 
-    // 受信（リアルタイム同期）
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
-       // --- 4時間経過チェック ---
-      const fourHours = 4 * 60 * 60 * 1000; // 4時間をミリ秒に変換
-      const now = Date.now();
-  
-      if (data.updatedAt && (now - data.updatedAt > fourHours)) {
-        // 4時間以上経過していたら入力を空にする
-        inputIds.forEach(id => { document.getElementById(id).value = ""; });
+
+      // 4時間経過チェック (4 * 60 * 60 * 1000 ms)
+      const limit = 4 * 60 * 60 * 1000;
+      if (data.updatedAt && (Date.now() - data.updatedAt > limit)) {
+        inputIds.forEach(id => document.getElementById(id).value = "");
+        checkIds.forEach(id => document.getElementById(id).checked = false);
         calculate();
-        document.getElementById('status').textContent = "古いデータは破棄されました";
+        document.getElementById('status').textContent = "4時間経過したためリセットされました";
         return;
-       }
-      // -----------------------
+      }
 
-
-      
       inputIds.forEach(id => {
         if (document.activeElement.id !== id) {
           document.getElementById(id).value = data[id] || "";
         }
       });
+      checkIds.forEach(id => {
+        document.getElementById(id).checked = data[id] || false;
+      });
+      
       calculate(); 
       document.getElementById('status').textContent = "最新データを取得しました";
     });
 
-    // 各イベント
-
-    inputIds.forEach(id => {
-      document.getElementById(id).addEventListener('input', () => { calculate(); saveData(); });
+    // 入力やチェックが変更されたら即保存
+    [...inputIds, ...checkIds].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => { calculate(); saveData(); });
+      if(inputIds.includes(id)) {
+        document.getElementById(id).addEventListener('input', () => { calculate(); saveData(); });
+      }
     });
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
