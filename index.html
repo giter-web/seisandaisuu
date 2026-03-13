@@ -94,7 +94,8 @@
       const a1 = Number(document.getElementById('A1').value) || 0;
       const a2 = Number(document.getElementById('A2').value) || 0;
       const e  = Number(document.getElementById('E').value) || 0;
-      document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e;
+      const f = Number(document.getElementById('F').value) || 0;
+      document.getElementById('A12E_result').textContent = (a1 * 2) + (a2 * 2) + e + (f * 2);
     }
 
     // 保存
@@ -164,6 +165,7 @@
   </script>
 </body>
 </html>
+
 
 
 
